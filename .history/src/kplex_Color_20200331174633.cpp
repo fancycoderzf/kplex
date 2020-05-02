@@ -94,7 +94,6 @@ void numberSort(vector<int> &P, vector<int> &upper) {
     }
     int sum = 0, val;
     P.clear();
-    upper.clear();
     for(int i = 0; i < colours; ++i) {
         int maxNum = 0;
         for(int j = 0; j < colourClass[i].size(); ++j) {
@@ -130,7 +129,7 @@ void delfrC(int v) {
     }
 }
 
-void updateP(vector<int> &P) {
+void updateP(vector<int> P, vector<int> &newP) {
     int P_cnt = P.size();
     memset(delP, 0, P_cnt*sizeof(int));
     for(auto x : C) {
@@ -142,28 +141,13 @@ void updateP(vector<int> &P) {
             }
         }
     }
-    vector<int> newP;
+    delP[P_cnt-1] = 1;
+    newP.clear();
     for(int i = 0; i < P_cnt; ++i) {
         int tmp = C.size()+1-K;
         if(adj[P[i]] >= tmp && !delP[i])
             newP.push_back(P[i]);
     }
-    P.clear();
-    for(int i = 0; i < newP.size(); ++i) 
-        P.push_back(newP[i]);
-    vector<int>().swap(newP);
-}
-
-int canAdd(int x) {
-    int cnt = 0;
-    int tmp = C.size()-K;
-    if(adj[x] <= tmp)
-        return 0;
-    for(auto y : C) {
-        if(adj[y] == tmp && !Graph[y].test(x))
-            return 0;
-    }
-    return 1;
 }
 
 void saveSolution() {
@@ -173,15 +157,10 @@ void saveSolution() {
     maxSize = C.size();
 }
 
-void expand(vector<int> P, vector<int> upper, int level) {
+void expand(vector<int> P) {
     int tmp = P.size();
-    updateP(P);
+    vector<int> upper, newP;
     numberSort(P, upper);
-    tmp = P.size();
-
-    if(!P.size() && C.size() > maxSize)
-        saveSolution();
-
     for(int i = tmp-1; i >= 0; --i) {
         int v = P[i];
         if(C.size() + upper[i] <= maxSize)
@@ -193,10 +172,31 @@ void expand(vector<int> P, vector<int> upper, int level) {
             continue;
         }
         addtoC(v);
-        P.pop_back();
 
-        expand(P, upper, level+1);
+        updateP(P, newP);
+
+        /*cout << "C: ";
+        for(int i = 0; i < C.size(); i++)
+            cout << C[i] << " ";
+        cout << endl;
+        cout << "P: ";
+        for(int i = 0; i < P.size(); i++)
+            cout << P[i] << " ";
+        cout << endl;
+        cout << "newP: ";
+        for(int i = 0; i < newP.size(); i++)
+            cout << newP[i] << " ";
+        cout << endl << endl;
+        cout << "maxSize: " << maxSize << endl;*/
+
+        if(!newP.size() && C.size() > maxSize)
+            saveSolution();
+        if(newP.size())
+            expand(newP);
         delfrC(v);
+        P.pop_back();
+        if(!P.size() && C.size() > maxSize)
+            saveSolution();
     }
 }
 
@@ -216,16 +216,14 @@ void output() {
 }
 
 void search() {
-    vector<int> P, upper;
+    vector<int> P;
     orderVertices(P);
-    expand(P, upper, 0);
-    vector<int>().swap(P);
-    vector<int>().swap(upper);
+    expand(P);
 }
 
 int main(int argc, char **argv) {
     freopen(argv[1], "r", stdin); 
-    //freopen("result111.txt", "w", stdout);
+    //freopen("result.txt", "w", stdout);
     str = argv[1];
     K = atoi(argv[2]);
     int tmp = 0;

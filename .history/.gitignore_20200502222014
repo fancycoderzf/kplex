@@ -1,0 +1,6 @@
+.vscode/
+bin/
+build/
+data/
+test/
+scripts/result1.py
